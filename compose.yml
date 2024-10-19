@@ -1,0 +1,21 @@
+services:
+  runner:
+    image: tensorpod/actions-image:latest
+    restart: always
+    environment:
+      - REPO=tensor-works/pymimic3
+      - TOKEN=${ACCESS_TOKEN}
+    deploy:
+      mode: replicated
+      replicas: 4
+      resources:
+        limits:
+          cpus: '3'
+          memory: 10G
+        reservations:
+          cpus: '2'
+          memory: 8G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
