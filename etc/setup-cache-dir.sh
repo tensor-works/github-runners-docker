@@ -16,4 +16,6 @@ else
     echo "Created directory: $cachedir"
 fi
 
+mkdir -p ${DOCKER_CACHE_DIR}/.registry
+
 echo "GitHub Actions cache directory setup complete."

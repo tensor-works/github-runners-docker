@@ -51,9 +51,13 @@ clean:
 	docker-compose down -v
 	rm -f .env
 
-.PHONY: test
+.PHONY: test-daemon
 test: setup
-	docker-compose run --rm test
+	@echo "Testing DOOD daemon access..."
+	@docker run --rm \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		--entrypoint /test_docker_daemon_access.sh \
+		$(IMAGE_NAME):$(IMAGE_TAG)
 
 .PHONY: test-buildx
 test-buildx:
@@ -62,3 +66,12 @@ test-buildx:
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		--entrypoint /test_buildx.sh \
 		$(IMAGE_NAME):$(IMAGE_TAG)
+
+.PHONY: test-registry
+test-registry: setup
+	@echo "Testing registry access..."
+	@docker-compose run --rm \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		--entrypoint /bin/bash \
+		runner \
+		-c "/test_registry_access.sh"

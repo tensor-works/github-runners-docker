@@ -1,4 +1,13 @@
+version: '3.8'
+
 services:
+  registry:
+    image: registry:2
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:${DOCKER_CACHE_DIR}/.registry
+
   runner:
     image: tensorpod/actions-image:latest
     restart: always
@@ -6,6 +15,7 @@ services:
       - REPO=tensor-works/pymimic3
       - TOKEN=${ACCESS_TOKEN}
       - DOCKER_CACHE_DIR=${DOCKER_CACHE_DIR}
+      - DOCKER_BUILDKIT=1
     volumes:
       - ${DOCKER_CACHE_DIR}:${DOCKER_CACHE_DIR}
     deploy:
@@ -22,11 +32,18 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [ gpu ]
+    depends_on:
+      - registry
+    # network_mode: "host"
+
   test:
     image: tensorpod/actions-image:latest
     volumes:
       - ${DOCKER_CACHE_DIR}:${DOCKER_CACHE_DIR}
     command: [ "/test_docker_daemon_access.sh" ]
+    depends_on:
+      - registry
 
-# docker run --rm -v '//./pipe/docker_engine://var/run/docker.sock' tensorpod/actions-image:latest /test_docker_daemon_access.sh
-# \\.\pipe\docker_engine:\\.\pipe\docker_engine
+volumes:
+  registry_data:
+    driver: local

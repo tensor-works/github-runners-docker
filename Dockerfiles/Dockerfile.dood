@@ -44,7 +44,10 @@ RUN apt-get update -y && apt-get install -y docker-ce-cli
 COPY ./Dockerfiles/scripts/* .
 COPY ./tests/test_docker/* .
 
-RUN sudo chmod +x start.sh && sudo chmod +x /test_docker_daemon_access.sh && sudo chmod +x /test_buildx.sh &&\
+RUN sudo chmod +x start.sh &&\
+    sudo chmod +x /test_docker_daemon_access.sh &&\
+    sudo chmod +x /test_buildx.sh &&\
+    sudo chmod +x /test_registry_access.sh &&\
     mkdir -p $DOCKER_CACHE_DIR
 
 
