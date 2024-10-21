@@ -2,6 +2,7 @@
 FROM ubuntu:20.04
 
 ARG RUNNER_VERSION="2.320.0"
+ARG DOCKER_CACHE_DIR=""
 
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive

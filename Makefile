@@ -3,10 +3,12 @@ ifeq ($(OS),Windows_NT)
     DETECTED_OS := Windows
     DEFAULT_CACHE_DIR := $(shell powershell -Command "Join-Path $$env:USERPROFILE '.github-action-cache'")
     CHECK_CACHE_DIR := powershell -Command "if (Test-Path .env) { $$env = Get-Content .env -Raw | ConvertFrom-StringData; if ($$env.DOCKER_CACHE_DIR) { Write-Output $$env.DOCKER_CACHE_DIR } }"
+    SETUP_SCRIPT := powershell -ExecutionPolicy Bypass -File etc/setup-cache-dir.ps1
 else
     DETECTED_OS := $(shell uname -s)
     DEFAULT_CACHE_DIR := $(HOME)/.github-action-cache
     CHECK_CACHE_DIR := if [ -f .env ] && grep -q DOCKER_CACHE_DIR .env; then grep DOCKER_CACHE_DIR .env | cut -d '=' -f2; fi
+    SETUP_SCRIPT := bash etc/setup-cache-dir.sh
 endif
 
 # Docker image name and tag
@@ -15,38 +17,20 @@ IMAGE_TAG := latest
 
 .PHONY: setup
 setup:
-	$(eval EXISTING_CACHE_DIR := $(shell $(CHECK_CACHE_DIR)))
-	@if [ -n "$(EXISTING_CACHE_DIR)" ]; then \
-		echo "DOCKER_CACHE_DIR already exists in .env file: $(EXISTING_CACHE_DIR)"; \
-		if [ "$(DETECTED_OS)" = "Windows" ]; then \
-			powershell -Command "if (-not (Test-Path '$(EXISTING_CACHE_DIR)')) { New-Item -Path '$(EXISTING_CACHE_DIR)' -ItemType Directory; Write-Host 'Created directory: $(EXISTING_CACHE_DIR)' }"; \
-		else \
-			mkdir -p "$(EXISTING_CACHE_DIR)"; \
-			echo "Created directory: $(EXISTING_CACHE_DIR)"; \
-		fi; \
-	else \
-		if [ "$(DETECTED_OS)" = "Windows" ]; then \
-			powershell -Command " \
-				$$cachedir = Read-Host 'Enter GitHub Actions cache directory (default: $(DEFAULT_CACHE_DIR))'; \
-				if (-not $$cachedir) { $$cachedir = '$(DEFAULT_CACHE_DIR)' }; \
-				if (-not (Test-Path .env -PathType Leaf)) { New-Item .env -ItemType File }; \
-				Add-Content -Path .env -Value \"DOCKER_CACHE_DIR=$$cachedir\"; \
-				Write-Host \"Added DOCKER_CACHE_DIR=$$cachedir to .env file\" \
-			"; \
-		else \
-			read -p "Enter GitHub Actions cache directory (default: $(DEFAULT_CACHE_DIR)): " cachedir; \
-			cachedir=$${cachedir:-$(DEFAULT_CACHE_DIR)}; \
-			echo "DOCKER_CACHE_DIR=$$cachedir" >> .env; \
-			echo "Added DOCKER_CACHE_DIR=$$cachedir to .env file"; \
-		fi; \
-	fi
-	@echo "GitHub Actions cache directory setup complete."
+	@echo "Setting up GitHub Actions cache directory..."
+	@$(SETUP_SCRIPT)
 
+# Function to load .env and export variables
+.PHONY: load_env
+load_env: 
+	@echo "Loading environment variables..."
+	$(eval include .env)
+	$(eval export)
 
 .PHONY: build
-build:
+build: setup load_env
 	@echo "Building Docker image..."
-	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfiles/Dockerfile.dood .
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfiles/Dockerfile.dood . --build-arg DOCKER_CACHE_DIR=$(DOCKER_CACHE_DIR)
 
 .PHONY: up
 up: setup
