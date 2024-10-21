@@ -20,8 +20,11 @@ RUN apt-get update && \
     python3 \
     libssl-dev \
     build-essential \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
+    lsb-release \
     && rm -rf /var/lib/apt/lists/*
-
 
 # Download and install the GitHub Actions runner
 RUN cd /home/docker && mkdir actions-runner && cd actions-runner \
@@ -29,9 +32,23 @@ RUN cd /home/docker && mkdir actions-runner && cd actions-runner \
     && tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
 RUN chown -R docker ~docker && /home/docker/actions-runner/bin/installdependencies.sh
 
+# Docker GPG keys
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+RUN echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update -y && apt-get install -y docker-ce-cli
+
 # Copy the startup script
-COPY start.sh start.sh
-RUN sudo chmod +x start.sh
+COPY ./Dockerfiles/scripts/* .
+COPY ./tests/test_docker/* .
+
+RUN sudo chmod +x start.sh && sudo chmod +x /test_docker_daemon_access.sh && sudo chmod +x /test_buildx.sh &&\
+    mkdir -p $DOCKER_CACHE_DIR
+
+
+# Set Docker host for TCP connection
+ENV DOCKER_HOST=tcp://host.docker.internal:2375
 
 USER docker
 
