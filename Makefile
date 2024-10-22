@@ -32,7 +32,7 @@ load_env:
 .PHONY: build
 build: setup load_env
 	@echo "Building Docker image..."
-	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfiles/Dockerfile.dood . --build-arg DOCKER_CACHE_DIR=$(DOCKER_CACHE_DIR)
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f docker/Dockerfile.dood . --build-arg DOCKER_CACHE_DIR=$(DOCKER_CACHE_DIR)
 .PHONY: up
 up: 
 	docker-compose up -d
@@ -56,7 +56,6 @@ clean:
 test: setup
 	@echo "Testing DOOD daemon access..."
 	@docker run --rm \
-		-v /var/run/docker.sock:/var/run/docker.sock \
 		--entrypoint /test_docker_daemon_access.sh \
 		$(IMAGE_NAME):$(IMAGE_TAG)
 
@@ -64,7 +63,6 @@ test: setup
 test-buildx:
 	@echo "Testing Docker Buildx setup..."
 	@docker run --rm \
-		-v /var/run/docker.sock:/var/run/docker.sock \
 		--entrypoint /test_buildx.sh \
 		$(IMAGE_NAME):$(IMAGE_TAG)
 
@@ -72,7 +70,14 @@ test-buildx:
 test-registry: setup
 	@echo "Testing registry access..."
 	@docker-compose run --rm \
-		-v /var/run/docker.sock:/var/run/docker.sock \
 		--entrypoint /bin/bash \
 		runner \
 		-c "/test_registry_access.sh"
+
+.PHONY: test-mongodb
+test-mongodb: setup
+	@echo "Testing MongoDB access..."
+	@docker-compose run --rm \
+		--entrypoint /bin/bash \
+		runner \
+		-c "python3 test_mongodb.py"

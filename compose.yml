@@ -1,6 +1,14 @@
-version: '3.8'
-
 services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - $DOCKER_CACHE_DIR/.github-action-cache/mongodb:/data/db
+    networks:
+      - mynetwork
+
   registry:
     image: registry:2
     ports:
@@ -18,6 +26,7 @@ services:
       - TOKEN=${ACCESS_TOKEN}
       - DOCKER_CACHE_DIR=${DOCKER_CACHE_DIR}
       - DOCKER_BUILDKIT=1
+      - MONGODB_HOST=mongodb://mongodb:27017
     volumes:
       - ${DOCKER_CACHE_DIR}:${DOCKER_CACHE_DIR}
     deploy:
@@ -36,6 +45,7 @@ services:
               capabilities: [ gpu ]
     depends_on:
       - registry
+      - mongodb
     networks:
       - mynetwork
 

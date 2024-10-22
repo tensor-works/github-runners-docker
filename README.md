@@ -63,7 +63,7 @@ The project uses a `.env` file for configuration. The setup process will guide y
 github-runners-docker/
 ├── .devcontainer/
 │   └── devcontainer.json
-├── Dockerfiles/
+├── docker/
 │   ├── scripts/
 │   │   ├── buildx-test.sh
 │   │   ├── docker-access-test.sh

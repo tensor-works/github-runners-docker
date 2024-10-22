@@ -41,14 +41,19 @@ RUN echo \
 RUN apt-get update -y && apt-get install -y docker-ce-cli
 
 # Copy the startup script
-COPY ./Dockerfiles/scripts/* .
+COPY ./docker/scripts/* .
 COPY ./tests/test_docker/* .
+COPY ./docker/requirements.txt requirements.txt
 
 RUN sudo chmod +x start.sh &&\
     sudo chmod +x /test_docker_daemon_access.sh &&\
     sudo chmod +x /test_buildx.sh &&\
     sudo chmod +x /test_registry_access.sh &&\
+    sudo chmod +x /test_mongodb.py &&\
     mkdir -p $DOCKER_CACHE_DIR
+
+RUN python3 -m pip install --upgrade pip &&\
+    pip install -r requirements.txt
 
 
 # Set Docker host for TCP connection

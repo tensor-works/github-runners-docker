@@ -4,7 +4,7 @@
 	"name": "Anaconda (Python 3)",
 	"build": { 
 		"context": "..",
-		"dockerfile": "../Dockerfiles/Dockerfile.dood"
+		"dockerfile": "../docker/Dockerfile.dood"
 	},
 	"runArgs": [
 		"--gpus",
