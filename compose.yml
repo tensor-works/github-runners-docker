@@ -6,7 +6,9 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - registry_data:${DOCKER_CACHE_DIR}/.registry
+      - ${DOCKER_CACHE_DIR}/.registry:/var/lib/registry
+    networks:
+      - mynetwork
 
   runner:
     image: tensorpod/actions-image:latest
@@ -34,16 +36,25 @@ services:
               capabilities: [ gpu ]
     depends_on:
       - registry
-    # network_mode: "host"
+    networks:
+      - mynetwork
 
   test:
     image: tensorpod/actions-image:latest
     volumes:
       - ${DOCKER_CACHE_DIR}:${DOCKER_CACHE_DIR}
     command: [ "/test_docker_daemon_access.sh" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - registry
+    networks:
+      - mynetwork
 
 volumes:
   registry_data:
     driver: local
+
+networks:
+  mynetwork:
+    driver: bridge

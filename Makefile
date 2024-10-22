@@ -19,6 +19,8 @@ IMAGE_TAG := latest
 setup:
 	@echo "Setting up GitHub Actions cache directory..."
 	@$(SETUP_SCRIPT)
+	@python3 ./etc/set-registry-as-insecure.py || python ./etc/set-registry-as-insecure.py
+	
 
 # Function to load .env and export variables
 .PHONY: load_env
@@ -31,9 +33,8 @@ load_env:
 build: setup load_env
 	@echo "Building Docker image..."
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfiles/Dockerfile.dood . --build-arg DOCKER_CACHE_DIR=$(DOCKER_CACHE_DIR)
-
 .PHONY: up
-up: setup
+up: 
 	docker-compose up -d
 
 .PHONY: down

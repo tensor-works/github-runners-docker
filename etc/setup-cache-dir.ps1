@@ -49,7 +49,7 @@ if (!(Test-Path -Path "${env:DOCKER_CACHE_DIR}\.registry")) {
     New-Item -ItemType Directory -Path "${env:DOCKER_CACHE_DIR}\.registry" -Force
     Write-Host "Directory created: ${env:DOCKER_CACHE_DIR}\.registry"
 } else {
-    Write-Host "Directory already exists: ${env:DOCKER_CACHE_DIR}\.registry"
+    Write-Host "Directory already exists: $dirToCreate\.registry"
 }
 
 Write-Host "GitHub Actions cache directory setup complete."
